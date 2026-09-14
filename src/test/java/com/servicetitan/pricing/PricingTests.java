@@ -56,4 +56,28 @@ class PricingTests {
 
         assertEquals(2368, calculator.calculateTotal(items, rules, MembershipTier.NONE));
     }
+
+    @Test
+    void taxIsChargedAfterDiscount() {
+        List<LineItem> items = List.of(
+                new LineItem(10000, LineItemType.PARTS, 1)
+        );
+
+        PricingRules rules = new PricingRules(0.0825, 0.10, RoundingMode.HALF_UP);
+
+        // 10000 -> 9000 after 10% discount; 9000 * 0.0825 = 742.5 -> 743; 9000 + 743
+        assertEquals(9743, calculator.calculateTotal(items, rules, MembershipTier.NONE));
+    }
+
+    @Test
+    void respectsRoundingModeOnTax() {
+        List<LineItem> items = List.of(
+                new LineItem(10000, LineItemType.PARTS, 1)
+        );
+
+        PricingRules rules = new PricingRules(0.0825, 0.10, RoundingMode.HALF_DOWN);
+
+        // same as above, but 742.5 rounds down to 742
+        assertEquals(9742, calculator.calculateTotal(items, rules, MembershipTier.NONE));
+    }
 }
