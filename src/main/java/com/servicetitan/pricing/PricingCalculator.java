@@ -3,6 +3,7 @@ package com.servicetitan.pricing;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
+import java.util.Objects;
 
 public class PricingCalculator {
 
@@ -12,6 +13,9 @@ public class PricingCalculator {
             List<LineItem> lineItems,
             PricingRules rules,
             MembershipTier membershipTier) {
+        Objects.requireNonNull(lineItems, "lineItems");
+        Objects.requireNonNull(rules, "rules");
+        Objects.requireNonNull(membershipTier, "membershipTier");
 
         long subtotal = lineItems.stream()
                 .mapToLong(line -> lineTotalAfterMembershipDiscount(line, membershipTier, rules.getRoundingMode()))
