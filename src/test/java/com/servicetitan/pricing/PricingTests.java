@@ -6,6 +6,7 @@ import java.math.RoundingMode;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 class PricingTests {
 
@@ -141,5 +142,36 @@ class PricingTests {
         PricingRules rules = new PricingRules(0.0, 0.0, RoundingMode.HALF_UP);
 
         assertEquals(10000, calculator.calculateTotal(items, rules, MembershipTier.NONE));
+    }
+
+    @Test
+    void goldRoundsPerLine() {
+        List<LineItem> items = List.of(
+                new LineItem(1005, LineItemType.LABOR, 1),
+                new LineItem(1005, LineItemType.LABOR, 1)
+        );
+
+        PricingRules rules = new PricingRules(0.0, 0.0, RoundingMode.HALF_UP);
+
+        // per line: 100.5 -> 101 each, 2010 - 202 = 1808 (aggregate rounding would give 1809)
+        assertEquals(1808, calculator.calculateTotal(items, rules, MembershipTier.GOLD));
+    }
+
+    @Test
+    void rejectsNullMembershipTier() {
+        List<LineItem> items = List.of(
+                new LineItem(10000, LineItemType.PARTS, 1)
+        );
+
+        PricingRules rules = new PricingRules(0.0, 0.0, RoundingMode.HALF_UP);
+
+        assertThrows(NullPointerException.class, () -> calculator.calculateTotal(items, rules, null));
+    }
+
+    @Test
+    void emptyLineItemsTotalZero() {
+        PricingRules rules = new PricingRules(0.0825, 0.10, RoundingMode.HALF_UP);
+
+        assertEquals(0, calculator.calculateTotal(List.of(), rules, MembershipTier.GOLD));
     }
 }
