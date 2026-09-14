@@ -17,15 +17,16 @@ public class PricingCalculator {
                 .mapToLong(LineItem::totalInCents)
                 .sum();
 
-        // TODO: Fix the order of operations and add GOLD membership pricing.
-        // The current implementation calculates tax before the order discount.
-        long tax = percentageOf(subtotal, rules.getTaxRate(), rules.getRoundingMode());
+        // TODO: Add GOLD membership pricing.
         long orderDiscount = percentageOf(
                 subtotal,
                 rules.getOrderDiscountRate(),
                 rules.getRoundingMode());
+        long discountedSubtotal = subtotal - orderDiscount;
 
-        return subtotal + tax - orderDiscount;
+        long tax = percentageOf(discountedSubtotal, rules.getTaxRate(), rules.getRoundingMode());
+
+        return discountedSubtotal + tax;
     }
 
     private long percentageOf(long amountInCents, double rate, RoundingMode roundingMode) {
