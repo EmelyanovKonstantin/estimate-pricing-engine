@@ -14,10 +14,9 @@ public class PricingCalculator {
             MembershipTier membershipTier) {
 
         long subtotal = lineItems.stream()
-                .mapToLong(LineItem::totalInCents)
+                .mapToLong(line -> lineTotalAfterMembershipDiscount(line, membershipTier, rules.getRoundingMode()))
                 .sum();
 
-        // TODO: Add GOLD membership pricing.
         long orderDiscount = percentageOf(
                 subtotal,
                 rules.getOrderDiscountRate(),
@@ -27,6 +26,18 @@ public class PricingCalculator {
         long tax = percentageOf(discountedSubtotal, rules.getTaxRate(), rules.getRoundingMode());
 
         return discountedSubtotal + tax;
+    }
+
+    // GOLD discount is rounded per line, on the line total (amount * quantity).
+    private long lineTotalAfterMembershipDiscount(
+            LineItem line,
+            MembershipTier membershipTier,
+            RoundingMode roundingMode) {
+        long lineTotal = line.totalInCents();
+        if (membershipTier == MembershipTier.GOLD && line.getType() == LineItemType.LABOR) {
+            return lineTotal - percentageOf(lineTotal, GOLD_LABOR_DISCOUNT, roundingMode);
+        }
+        return lineTotal;
     }
 
     private long percentageOf(long amountInCents, double rate, RoundingMode roundingMode) {
