@@ -13,11 +13,11 @@ public class PricingCalculator {
             PricingRules rules,
             MembershipTier membershipTier) {
 
+        // Order of operations: membership (GOLD labor) -> order discount -> tax.
         long subtotal = lineItems.stream()
-                .mapToLong(LineItem::totalInCents)
+                .mapToLong(item -> lineTotalAfterMembership(item, membershipTier, rules.getRoundingMode()))
                 .sum();
 
-        // TODO: add GOLD membership pricing (applied before the order discount).
         long orderDiscount = percentageOf(
                 subtotal,
                 rules.getOrderDiscountRate(),
@@ -27,6 +27,20 @@ public class PricingCalculator {
         long tax = percentageOf(discountedSubtotal, rules.getTaxRate(), rules.getRoundingMode());
 
         return discountedSubtotal + tax;
+    }
+
+    private long lineTotalAfterMembership(
+            LineItem item,
+            MembershipTier membershipTier,
+            RoundingMode roundingMode) {
+
+        long lineTotal = item.totalInCents();
+
+        if (membershipTier == MembershipTier.GOLD && item.getType() == LineItemType.LABOR) {
+            return lineTotal - percentageOf(lineTotal, GOLD_LABOR_DISCOUNT, roundingMode);
+        }
+
+        return lineTotal;
     }
 
     private long percentageOf(long amountInCents, double rate, RoundingMode roundingMode) {
