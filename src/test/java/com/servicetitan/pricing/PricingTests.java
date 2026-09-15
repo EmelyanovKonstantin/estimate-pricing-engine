@@ -46,6 +46,18 @@ class PricingTests {
     }
 
     @Test
+    void TaxIsChargedAfterDiscount() {
+        List<LineItem> items = List.of(
+                new LineItem(10000, LineItemType.LABOR, 1)
+        );
+
+        PricingRules rules = new PricingRules(0.0825, 0.10, RoundingMode.HALF_UP);
+
+        // 10000 -> 9000 after 10% discount; 8.25% of 9000 = 742.5 -> 743 half-up; 9000 + 743
+        assertEquals(9743, calculator.calculateTotal(items, rules, MembershipTier.NONE));
+    }
+
+    @Test
     void zeroRatesLeaveSubtotalUnchanged() {
         List<LineItem> items = List.of(
                 new LineItem(1234, LineItemType.LABOR, 1),
